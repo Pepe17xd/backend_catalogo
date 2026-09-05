@@ -1,0 +1,24 @@
+# Local environment and secrets
+.env
+.env.*
+!.env.example
+
+# Maven output
+target/
+
+# IDEs
+.idea/
+*.iml
+.vscode/
+
+# Logs
+logs/
+*.log
+
+# Operating system and temporary files
+.DS_Store
+Thumbs.db
+*.tmp
+*.temp
+*.swp
+*~
