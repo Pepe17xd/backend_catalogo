@@ -1,95 +1,123 @@
-# Cinema Club Online — Catalog Service v2
+# Cinema Club Online — Catalog Service
 
-Servicio REST de catálogo multimedia construido con Spring Boot y PostgreSQL.
+Microservicio REST de catálogo multimedia con Spring Boot 3, Java 17, PostgreSQL 16 y Flyway. Las imágenes y vídeos se almacenan fuera del servicio; la base de datos guarda las referencias.
 
-Incluye catálogo inicial, CRUD REST, búsqueda por género y metadatos de reproducción. Los videos e imágenes permanecen en almacenamiento externo; la base de datos guarda sus referencias.
+## Arquitectura de despliegue
 
-## Requisitos
+Docker Compose ejecuta dos contenedores separados en una red privada:
 
-- Java 17 o superior
-- Docker con Docker Compose
+- `catalog-service`: API publicada en el puerto `APP_PORT` (8081 por defecto).
+- `postgres`: base de datos sin puerto publicado al host y con volumen persistente `catalog_data`.
 
-No es necesario instalar Maven: el repositorio incluye Maven Wrapper.
+La API espera a que PostgreSQL esté sano antes de iniciar. Ambos contenedores tienen healthcheck: PostgreSQL usa `pg_isready` y la aplicación usa `GET /actuator/health`.
 
-## Configuración local
+## Variables de entorno
 
-Después de clonar el repositorio, crea tu archivo de variables desde el ejemplo:
-
-**Windows PowerShell**
+Copia el ejemplo antes de arrancar:
 
 ```powershell
 Copy-Item .env.example .env
 ```
 
-**Linux/macOS**
-
 ```bash
 cp .env.example .env
 ```
 
-El archivo `.env` está ignorado por Git. Puedes cambiar sus valores locales; `DB_NAME` dentro de `DB_URL` debe coincidir con la variable `DB_NAME`.
+| Variable | Requerida | Uso |
+| --- | --- | --- |
+| `DB_NAME` | Sí | Nombre de la base que inicializa PostgreSQL. |
+| `DB_USER` | Sí | Usuario de PostgreSQL y de la aplicación. |
+| `DB_PASSWORD` | Sí | Contraseña de PostgreSQL. No subir al repositorio. |
+| `DB_URL` | Solo al ejecutar Spring Boot fuera de Docker | URL JDBC de la base accesible desde el host. |
+| `CORS_ALLOWED_ORIGINS` | Recomendado | Orígenes permitidos, separados por coma. En producción debe definirse explícitamente. |
+| `APP_PORT` | No | Puerto expuesto de la API; por defecto `8081`. |
 
-| Variable | Uso |
-| --- | --- |
-| `DB_NAME` | Base de datos que crea PostgreSQL |
-| `DB_USER` | Usuario compartido por PostgreSQL y Spring Boot |
-| `DB_PASSWORD` | Contraseña compartida por PostgreSQL y Spring Boot |
-| `DB_URL` | URL JDBC usada por Spring Boot |
+Dentro de Compose, `DB_URL` se construye con el hostname de servicio `postgres`; nunca depende de `localhost`. La aplicación recibe siempre `DB_URL`, `DB_USER` y `DB_PASSWORD` por entorno. Para una VM o plataforma, inyecta esas variables mediante su gestor de secretos, sin crear `.env` en la imagen.
 
-## Ejecución
+## Ejecución local
 
-Levanta PostgreSQL sin cambiar el puerto existente (`5433` en el host):
+Para ejecutar todo con contenedores:
 
 ```bash
-docker compose up -d
+docker compose up --build -d
+docker compose ps
+curl http://localhost:8081/actuator/health
 ```
 
-Luego inicia la aplicación en otra terminal. Spring Boot importa automáticamente el `.env` local y continúa escuchando en el puerto `8081`.
+Los datos sobreviven a `docker compose down`. Para eliminarlos deliberadamente, usa `docker compose down -v`.
 
-**Windows PowerShell**
+Para ejecutar solo Spring Boot desde el host, primero proporciona una instancia PostgreSQL accesible según `DB_URL` de `.env` y después:
 
 ```powershell
 .\mvnw.cmd spring-boot:run
 ```
 
-**Linux/macOS**
-
 ```bash
 ./mvnw spring-boot:run
 ```
 
-Para detener PostgreSQL sin eliminar sus datos:
+La URL JDBC no está fijada en `application.properties`; se configura con `DB_URL`. La aplicación valida el esquema y Flyway aplica las migraciones al iniciar.
+
+## Imagen Docker
+
+El Dockerfile es multi-stage: compila el JAR desde un checkout limpio con Maven Wrapper y ejecuta una imagen JRE como usuario no privilegiado. Para construir y etiquetar la imagen que se publicará:
 
 ```bash
-docker compose stop
+docker build -t antony17xd/catalog-service:v1 .
 ```
 
-## Endpoints principales
+Publicación en Docker Hub (con una sesión autenticada):
+
+```bash
+docker login
+docker push antony17xd/catalog-service:v1
+```
+
+`docker-compose.yml` conserva esa misma etiqueta en `image:` y también declara `build:` para desarrollo o CI. En una VM que deba usar únicamente la imagen publicada:
+
+```bash
+docker compose pull --ignore-buildable
+docker compose up -d --no-build
+```
+
+Instala Docker Engine y Docker Compose en la VM, copia `docker-compose.yml` y un `.env` seguro (o configura las variables en el entorno), abre solamente `APP_PORT` en el firewall y usa un proxy TLS delante de la API. No expongas PostgreSQL públicamente.
+
+## Migraciones e inicialización
+
+`src/main/resources/db/migration/V1__create_catalog_schema.sql` crea las tablas `genre`, `artist`, `movie`, sus relaciones, fuentes de vídeo y subtítulos. También carga géneros, artistas y tres películas de muestra. Flyway registra la migración en su tabla de historial y no la ejecuta de nuevo en bases ya inicializadas; Hibernate usa `ddl-auto=validate`, por lo que no modifica el esquema.
+
+Para cambios futuros, añade una nueva migración versionada (`V2__...sql`); no alteres una migración que ya haya llegado a producción.
+
+## API y gestión de catálogo
+
+Endpoints disponibles:
 
 - `GET /api/catalog/movies`
-- `GET /api/catalog/home`
-- `GET /api/catalog/search?q=Animation`
 - `GET /api/catalog/movies/{publicId}`
 - `GET /api/catalog/movies/{publicId}/session-info`
+- `GET /api/catalog/home`
+- `GET /api/catalog/search?q=Animation`
 - `POST /api/catalog/movies`
 
-La API expone UUID públicos, nunca las claves numéricas internas. Swagger UI está disponible en `/swagger-ui.html` y OpenAPI en `/v3/api-docs`.
+Swagger UI está en `/swagger-ui.html`, OpenAPI en `/v3/api-docs` y el estado operativo en `/actuator/health`.
 
-Ejemplos de verificación:
-
-```bash
-curl http://localhost:8081/api/catalog/movies
-curl http://localhost:8081/api/catalog/home
-```
-
-## Compilación
+Para cargar una película usa el endpoint `POST` (actualmente no tiene autenticación ni rol administrativo):
 
 ```bash
-./mvnw clean package
+curl -X POST http://localhost:8081/api/catalog/movies \
+  -H "Content-Type: application/json" \
+  -d '{
+    "title": "Nueva película",
+    "description": "Descripción",
+    "releaseYear": 2026,
+    "durationMinutes": 100,
+    "rating": 8.1,
+    "status": "READY",
+    "genreSlugs": ["action"],
+    "artistIds": [1],
+    "videoSources": [{"quality":"720p","type":"MP4","url":"https://example.com/video.mp4","priority":0}],
+    "subtitles": [{"language":"es","url":"https://example.com/es.vtt"}]
+  }'
 ```
 
-En Windows usa `.\mvnw.cmd clean package`.
-
-## Despliegue
-
-No publiques el archivo `.env`. En cada entorno define `DB_NAME`, `DB_USER`, `DB_PASSWORD` y `DB_URL` mediante el gestor de secretos o variables de entorno de la plataforma.
+Los `genreSlugs` y `artistIds` deben existir previamente; la migración inicial proporciona los géneros y artistas de muestra. No hay controlador ni endpoints `/admin`, ni operaciones `PUT`, `PATCH` o `DELETE`. Para una administración real faltan autenticación/autorización, gestión de géneros/artistas y edición/eliminación de películas. Esas capacidades no se agregaron para no cambiar la lógica de negocio.
