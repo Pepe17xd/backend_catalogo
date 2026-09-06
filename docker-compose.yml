@@ -1,4 +1,5 @@
 services:
+
   postgres:
     image: postgres:16
     container_name: cinema-catalog-db
@@ -8,3 +9,22 @@ services:
       POSTGRES_PASSWORD: ${DB_PASSWORD}
     ports:
       - "5433:5432"
+    volumes:
+      - catalog_data:/var/lib/postgresql/data
+
+
+  catalog-service:
+    image: catalog-service:v1
+    container_name: cinema-catalog-service
+    ports:
+      - "8081:8081"
+    environment:
+      DB_URL: jdbc:postgresql://postgres:5432/${DB_NAME}
+      DB_USER: ${DB_USER}
+      DB_PASSWORD: ${DB_PASSWORD}
+    depends_on:
+      - postgres
+
+
+volumes:
+  catalog_data:
