@@ -67,16 +67,19 @@ docker compose stop
 ## Endpoints principales
 
 - `GET /api/catalog/movies`
-- `GET /api/catalog/movies/{id}`
-- `GET /api/catalog/movies/{id}/play`
-- `GET /api/catalog/movies/search?genre=Animation`
+- `GET /api/catalog/home`
+- `GET /api/catalog/search?q=Animation`
+- `GET /api/catalog/movies/{publicId}`
+- `GET /api/catalog/movies/{publicId}/session-info`
 - `POST /api/catalog/movies`
+
+La API expone UUID públicos, nunca las claves numéricas internas. Swagger UI está disponible en `/swagger-ui.html` y OpenAPI en `/v3/api-docs`.
 
 Ejemplos de verificación:
 
 ```bash
 curl http://localhost:8081/api/catalog/movies
-curl http://localhost:8081/api/catalog/movies/1/play
+curl http://localhost:8081/api/catalog/home
 ```
 
 ## Compilación
