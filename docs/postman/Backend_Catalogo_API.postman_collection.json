@@ -1,0 +1,89 @@
+{
+  "info": {
+    "_postman_id": "3c82f1c7-4053-47f0-b7c5-4a0910a1bed3",
+    "name": "Backend Catalogo API",
+    "description": "Coleccion basada en los endpoints expuestos por catalog-service. La API no implementa autenticacion ni autorizacion.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "base_url", "value": "http://IP_DE_LA_MAQUINA_VIRTUAL:PUERTO", "type": "string" },
+    { "key": "movie_id", "value": "a18ea230-56a9-4d37-9ef8-349e99078c53", "type": "string" }
+  ],
+  "item": [
+    {
+      "name": "Health",
+      "item": [
+        {
+          "name": "Application health",
+          "request": { "method": "GET", "header": [], "url": "{{base_url}}/actuator/health", "description": "Estado operativo de Spring Boot Actuator. Sin autenticacion." },
+          "response": [{ "name": "UP", "originalRequest": { "method": "GET", "header": [], "url": "{{base_url}}/actuator/health" }, "status": "OK", "code": 200, "_postman_previewlanguage": "json", "header": [{ "key": "Content-Type", "value": "application/json" }], "body": "{\n  \"status\": \"UP\"\n}" }]
+        }
+      ]
+    },
+    {
+      "name": "Catalog",
+      "item": [
+        {
+          "name": "List movies",
+          "request": { "method": "GET", "header": [{ "key": "Accept", "value": "application/json" }], "url": "{{base_url}}/api/catalog/movies", "description": "Lista el catalogo de peliculas. Sin autenticacion." },
+          "response": [{ "name": "Catalog list", "originalRequest": { "method": "GET", "header": [], "url": "{{base_url}}/api/catalog/movies" }, "status": "OK", "code": 200, "_postman_previewlanguage": "json", "header": [{ "key": "Content-Type", "value": "application/json" }], "body": "[\n  {\n    \"id\": \"a18ea230-56a9-4d37-9ef8-349e99078c53\",\n    \"title\": \"Sintel\",\n    \"posterUrl\": \"https://media.w3.org/2010/05/sintel/poster.png\",\n    \"backdropUrl\": \"https://media.w3.org/2010/05/sintel/poster.png\",\n    \"genres\": [\"Fantasy\"],\n    \"rating\": 6.2,\n    \"durationMinutes\": 15\n  }\n]" }]
+        },
+        {
+          "name": "Get movie detail",
+          "request": { "method": "GET", "header": [{ "key": "Accept", "value": "application/json" }], "url": "{{base_url}}/api/catalog/movies/{{movie_id}}", "description": "Obtiene una pelicula por UUID publico. Path parameter: movie_id." },
+          "response": [{ "name": "Movie detail", "originalRequest": { "method": "GET", "header": [], "url": "{{base_url}}/api/catalog/movies/{{movie_id}}" }, "status": "OK", "code": 200, "_postman_previewlanguage": "json", "header": [{ "key": "Content-Type", "value": "application/json" }], "body": "{\n  \"id\": \"a18ea230-56a9-4d37-9ef8-349e99078c53\",\n  \"title\": \"Sintel\",\n  \"description\": \"Open source fantasy short film created with Blender.\",\n  \"genres\": [\"Fantasy\"],\n  \"artists\": [{\"name\": \"Blender Foundation\", \"biography\": \"Organization behind several open movie projects.\", \"photoUrl\": null, \"type\": \"DIRECTOR\"}],\n  \"rating\": 6.2,\n  \"durationMinutes\": 15,\n  \"posterUrl\": \"https://media.w3.org/2010/05/sintel/poster.png\",\n  \"backdropUrl\": \"https://media.w3.org/2010/05/sintel/poster.png\"\n}" }, { "name": "Movie not found", "originalRequest": { "method": "GET", "header": [], "url": "{{base_url}}/api/catalog/movies/00000000-0000-0000-0000-000000000000" }, "status": "Not Found", "code": 404, "_postman_previewlanguage": "json", "header": [{ "key": "Content-Type", "value": "application/json" }], "body": "{\n  \"timestamp\": \"2026-09-12T00:00:00Z\",\n  \"status\": 404,\n  \"message\": \"Movie not found: 00000000-0000-0000-0000-000000000000\",\n  \"path\": \"/api/catalog/movies/00000000-0000-0000-0000-000000000000\"\n}" }]
+        },
+        {
+          "name": "Get movie session info",
+          "request": { "method": "GET", "header": [{ "key": "Accept", "value": "application/json" }], "url": "{{base_url}}/api/catalog/movies/{{movie_id}}/session-info", "description": "Metadatos de reproduccion para Cinema Session Service. Path parameter: movie_id." },
+          "response": [{ "name": "Session metadata", "originalRequest": { "method": "GET", "header": [], "url": "{{base_url}}/api/catalog/movies/{{movie_id}}/session-info" }, "status": "OK", "code": 200, "_postman_previewlanguage": "json", "header": [{ "key": "Content-Type", "value": "application/json" }], "body": "{\n  \"movieId\": \"a18ea230-56a9-4d37-9ef8-349e99078c53\",\n  \"title\": \"Sintel\",\n  \"durationMinutes\": 15,\n  \"stream\": {\n    \"url\": \"https://download.blender.org/durian/trailer/sintel_trailer-720p.mp4\",\n    \"type\": \"MP4\"\n  },\n  \"subtitles\": []\n}" }]
+        },
+        {
+          "name": "Get home catalog",
+          "request": { "method": "GET", "header": [{ "key": "Accept", "value": "application/json" }], "url": "{{base_url}}/api/catalog/home", "description": "Pelicula destacada y secciones Trending y Action. Sin autenticacion." },
+          "response": [{ "name": "Home content", "originalRequest": { "method": "GET", "header": [], "url": "{{base_url}}/api/catalog/home" }, "status": "OK", "code": 200, "_postman_previewlanguage": "json", "header": [{ "key": "Content-Type", "value": "application/json" }], "body": "{\n  \"featuredMovie\": {\n    \"id\": \"a18ea230-56a9-4d37-9ef8-349e99078c53\",\n    \"title\": \"Sintel\",\n    \"posterUrl\": \"https://media.w3.org/2010/05/sintel/poster.png\",\n    \"backdropUrl\": \"https://media.w3.org/2010/05/sintel/poster.png\",\n    \"genres\": [\"Fantasy\"],\n    \"rating\": 6.2,\n    \"durationMinutes\": 15\n  },\n  \"sections\": [\n    { \"name\": \"Trending\", \"movies\": [] },\n    { \"name\": \"Action\", \"movies\": [] }\n  ]\n}" }]
+        },
+        {
+          "name": "Search catalog",
+          "request": { "method": "GET", "header": [{ "key": "Accept", "value": "application/json" }], "url": { "raw": "{{base_url}}/api/catalog/search?q=Animation", "host": ["{{base_url}}"], "path": ["api", "catalog", "search"], "query": [{ "key": "q", "value": "Animation", "description": "Obligatorio; busca titulo, genero o artista." }] }, "description": "Busca por titulo, genero o artista. Query parameter obligatorio: q." },
+          "response": [{ "name": "Search result", "originalRequest": { "method": "GET", "header": [], "url": "{{base_url}}/api/catalog/search?q=Animation" }, "status": "OK", "code": 200, "_postman_previewlanguage": "json", "header": [{ "key": "Content-Type", "value": "application/json" }], "body": "[\n  {\n    \"id\": \"bb89a5df-7571-46ed-b777-1357f98d0619\",\n    \"title\": \"Big Buck Bunny\",\n    \"posterUrl\": \"https://media.w3.org/2010/05/bunny/poster.png\",\n    \"backdropUrl\": \"https://media.w3.org/2010/05/bunny/poster.png\",\n    \"genres\": [\"Animation\"],\n    \"rating\": 6.1,\n    \"durationMinutes\": 10\n  }\n]" }, { "name": "Blank query", "originalRequest": { "method": "GET", "header": [], "url": "{{base_url}}/api/catalog/search?q=" }, "status": "Bad Request", "code": 400, "_postman_previewlanguage": "json", "header": [{ "key": "Content-Type", "value": "application/json" }], "body": "{\n  \"timestamp\": \"2026-09-12T00:00:00Z\",\n  \"status\": 400,\n  \"message\": \"q must not be blank\",\n  \"path\": \"/api/catalog/search\"\n}" }]
+        },
+        {
+          "name": "Create movie",
+          "request": { "method": "POST", "header": [{ "key": "Content-Type", "value": "application/json" }, { "key": "Accept", "value": "application/json" }], "body": { "mode": "raw", "raw": "{\n  \"title\": \"Nueva pelicula\",\n  \"description\": \"Descripcion de ejemplo.\",\n  \"releaseYear\": 2026,\n  \"durationMinutes\": 100,\n  \"posterUrl\": \"https://example.com/poster.jpg\",\n  \"backdropUrl\": \"https://example.com/backdrop.jpg\",\n  \"rating\": 8.1,\n  \"status\": \"READY\",\n  \"genreSlugs\": [\"action\"],\n  \"artistIds\": [1],\n  \"videoSources\": [{\"quality\": \"720p\", \"type\": \"MP4\", \"url\": \"https://example.com/video.mp4\", \"priority\": 0}],\n  \"subtitles\": [{\"language\": \"es\", \"url\": \"https://example.com/es.vtt\"}]\n}", "options": { "raw": { "language": "json" } } }, "url": "{{base_url}}/api/catalog/movies", "description": "Crea una pelicula. Requeridos: title y durationMinutes (> 0). releaseYear: 1888-2100; rating: 0.0-10.0. genreSlugs y artistIds deben existir. Defaults: status READY, type MP4, priority 0. status: READY/OFFLINE/PROCESSING; quality: auto/360p/720p/1080p; type: MP4/HLS/DASH. Sin autenticacion." },
+          "response": [{ "name": "Movie created", "originalRequest": { "method": "POST", "header": [{ "key": "Content-Type", "value": "application/json" }], "url": "{{base_url}}/api/catalog/movies" }, "status": "Created", "code": 201, "_postman_previewlanguage": "json", "header": [{ "key": "Content-Type", "value": "application/json" }, { "key": "Location", "value": "/api/catalog/movies/{uuid-generado}" }], "body": "{\n  \"id\": \"{uuid-generado}\",\n  \"title\": \"Nueva pelicula\",\n  \"description\": \"Descripcion de ejemplo.\",\n  \"genres\": [\"Action\"],\n  \"artists\": [{\"name\": \"Blender Foundation\", \"biography\": \"Organization behind several open movie projects.\", \"photoUrl\": null, \"type\": \"DIRECTOR\"}],\n  \"rating\": 8.1,\n  \"durationMinutes\": 100,\n  \"posterUrl\": \"https://example.com/poster.jpg\",\n  \"backdropUrl\": \"https://example.com/backdrop.jpg\"\n}" }]
+        }
+      ]
+    },
+    {
+      "name": "Authentication",
+      "description": "No hay endpoints de autenticacion en este servicio.",
+      "item": []
+    },
+    {
+      "name": "Users",
+      "description": "No hay endpoints de usuarios en este servicio.",
+      "item": []
+    },
+    {
+      "name": "Products",
+      "description": "No hay endpoints de productos en este servicio; el modulo existente es Catalog.",
+      "item": []
+    },
+    {
+      "name": "Other modules",
+      "item": [
+        {
+          "name": "OpenAPI document",
+          "request": { "method": "GET", "header": [{ "key": "Accept", "value": "application/json" }], "url": "{{base_url}}/v3/api-docs", "description": "Documento OpenAPI generado por springdoc. Sin autenticacion." },
+          "response": []
+        },
+        {
+          "name": "Swagger UI",
+          "request": { "method": "GET", "header": [{ "key": "Accept", "value": "text/html" }], "url": "{{base_url}}/swagger-ui.html", "description": "Interfaz web de Swagger UI configurada por springdoc. Sin autenticacion." },
+          "response": []
+        }
+      ]
+    }
+  ]
+}
