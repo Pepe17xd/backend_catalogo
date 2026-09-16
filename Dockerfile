@@ -8,6 +8,11 @@ COPY .mvn/ .mvn/
 COPY mvnw pom.xml ./
 RUN chmod +x mvnw
 
+# Descargar todas las dependencias primero (esta capa se cachea).
+# Solo se vuelve a ejecutar si pom.xml cambia, NO cuando cambia el código fuente.
+RUN ./mvnw -B dependency:go-offline -q
+
+# Ahora sí copiar el código fuente (esta capa se invalida con cada cambio de código)
 COPY src/ src/
 RUN ./mvnw -B -DskipTests package
 
