@@ -8,11 +8,13 @@ import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
 public interface MovieRepository extends JpaRepository<Movie, Long> {
     @EntityGraph(attributePaths = "genres")
     @Query("select distinct m from Movie m")
-    List<Movie> findAllForCatalog();
+    Page<Movie> findAllForCatalog(Pageable pageable);
 
     @EntityGraph(attributePaths = {"genres", "artists", "videoSources", "subtitles"})
     Optional<Movie> findByPublicId(UUID publicId);

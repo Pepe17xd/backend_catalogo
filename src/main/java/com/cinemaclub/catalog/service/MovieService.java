@@ -7,6 +7,8 @@ import com.cinemaclub.catalog.model.*;
 import com.cinemaclub.catalog.repository.*;
 import java.util.*;
 import org.springframework.stereotype.Service;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
@@ -22,7 +24,7 @@ public class MovieService {
     }
 
     @Transactional(readOnly = true)
-    public List<MovieCatalogResponse> findAll() { return movieRepository.findAllForCatalog().stream().map(mapper::toCatalog).toList(); }
+    public Page<MovieCatalogResponse> findAll(Pageable pageable) { return movieRepository.findAllForCatalog(pageable).map(mapper::toCatalog); }
 
     @Transactional(readOnly = true)
     public MovieDetailResponse findDetail(UUID publicId) { return mapper.toDetail(findMovie(publicId)); }
@@ -38,7 +40,7 @@ public class MovieService {
 
     @Transactional(readOnly = true)
     public HomeResponse home() {
-        List<Movie> movies = movieRepository.findAllForCatalog();
+        List<Movie> movies = movieRepository.findAll(); // use standard findAll for home processing
         Comparator<Movie> byRating = Comparator.comparing(Movie::getRating, Comparator.nullsLast(Comparator.reverseOrder()));
         MovieCatalogResponse featured = movies.stream().sorted(byRating).findFirst().map(mapper::toCatalog).orElse(null);
         List<MovieCatalogResponse> trending = movies.stream().sorted(byRating).limit(SECTION_SIZE).map(mapper::toCatalog).toList();

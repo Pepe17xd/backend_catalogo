@@ -10,6 +10,8 @@ import java.net.URI;
 import java.util.*;
 import org.springframework.http.*;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 
 @RestController
 @RequestMapping("/api/catalog/movies")
@@ -18,8 +20,13 @@ public class MovieController {
     private final MovieService movieService;
     public MovieController(MovieService movieService) { this.movieService = movieService; }
 
-    @GetMapping @Operation(summary = "Lista el catálogo")
-    public List<MovieCatalogResponse> all() { return movieService.findAll(); }
+    @GetMapping @Operation(summary = "Lista el catálogo paginado")
+    public Page<MovieCatalogResponse> all(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size
+    ) { 
+        return movieService.findAll(PageRequest.of(page, size)); 
+    }
 
     @GetMapping("/{publicId}") @Operation(summary = "Obtiene el detalle por UUID público")
     public MovieDetailResponse one(@PathVariable UUID publicId) { return movieService.findDetail(publicId); }
